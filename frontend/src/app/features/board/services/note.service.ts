@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { Note, NoteCreateRequest, NoteUpdateRequest, NotePositionRequest } from '../../../shared/models/note.model';
@@ -7,24 +7,24 @@ import { Note, NoteCreateRequest, NoteUpdateRequest, NotePositionRequest } from 
   providedIn: 'root'
 })
 export class NoteService {
-  private API_URL = '/api/notes';
+  private http = inject(HttpClient);
 
-  notesSignal = signal<Note[]>([]);
+  /** Notas del tablero abierto actualmente. */
+  private notesSignal = signal<Note[]>([]);
+  readonly notes = this.notesSignal.asReadonly();
 
-  constructor(private http: HttpClient) {}
-
-  get notes() {
-    return this.notesSignal.asReadonly();
+  clear() {
+    this.notesSignal.set([]);
   }
 
-  loadNotes(): Observable<Note[]> {
-    return this.http.get<Note[]>(this.API_URL).pipe(
+  loadNotes(boardId: number): Observable<Note[]> {
+    return this.http.get<Note[]>(`/api/boards/${boardId}/notes`).pipe(
       tap(notes => this.notesSignal.set(notes))
     );
   }
 
-  createNote(request: NoteCreateRequest): Observable<Note> {
-    return this.http.post<Note>(this.API_URL, request).pipe(
+  createNote(boardId: number, request: NoteCreateRequest): Observable<Note> {
+    return this.http.post<Note>(`/api/boards/${boardId}/notes`, request).pipe(
       tap(newNote => {
         this.notesSignal.update(notes => [...notes, newNote]);
       })
@@ -32,30 +32,28 @@ export class NoteService {
   }
 
   updateNote(id: number, request: NoteUpdateRequest): Observable<Note> {
-    return this.http.put<Note>(`${this.API_URL}/${id}`, request).pipe(
-      tap(updatedNote => {
-        this.notesSignal.update(notes => 
-          notes.map(note => note.id === id ? updatedNote : note)
-        );
-      })
+    return this.http.put<Note>(`/api/notes/${id}`, request).pipe(
+      tap(updatedNote => this.replaceNote(updatedNote))
     );
   }
 
   updatePosition(id: number, request: NotePositionRequest): Observable<Note> {
-    return this.http.patch<Note>(`${this.API_URL}/${id}/position`, request).pipe(
-      tap(updatedNote => {
-        this.notesSignal.update(notes => 
-          notes.map(note => note.id === id ? updatedNote : note)
-        );
-      })
+    return this.http.patch<Note>(`/api/notes/${id}/position`, request).pipe(
+      tap(updatedNote => this.replaceNote(updatedNote))
     );
   }
 
   deleteNote(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${id}`).pipe(
+    return this.http.delete<void>(`/api/notes/${id}`).pipe(
       tap(() => {
         this.notesSignal.update(notes => notes.filter(note => note.id !== id));
       })
+    );
+  }
+
+  private replaceNote(updatedNote: Note) {
+    this.notesSignal.update(notes =>
+      notes.map(note => note.id === updatedNote.id ? updatedNote : note)
     );
   }
 }

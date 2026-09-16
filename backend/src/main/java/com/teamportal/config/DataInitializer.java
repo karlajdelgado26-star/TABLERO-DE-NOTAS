@@ -14,27 +14,24 @@ public class DataInitializer {
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            if (!userRepository.existsByEmail("admin@demo.com")) {
-                User admin = new User();
-                admin.setName("Admin Demo");
-                admin.setEmail("admin@demo.com");
-                admin.setPassword(passwordEncoder.encode("Admin123*"));
-                admin.setRole(Role.ADMIN);
-                admin.setActive(true);
-                userRepository.save(admin);
-                System.out.println("Demo Admin user created.");
-            }
-
-            if (!userRepository.existsByEmail("usuario@demo.com")) {
-                User user = new User();
-                user.setName("User Demo");
-                user.setEmail("usuario@demo.com");
-                user.setPassword(passwordEncoder.encode("Usuario123*"));
-                user.setRole(Role.USER);
-                user.setActive(true);
-                userRepository.save(user);
-                System.out.println("Demo User created.");
-            }
+            createDemoUser(userRepository, passwordEncoder, "Admin Demo", "admin@demo.com", "Admin123*", Role.ADMIN);
+            createDemoUser(userRepository, passwordEncoder, "Lider Demo", "lider@demo.com", "Lider123*", Role.LEADER);
+            createDemoUser(userRepository, passwordEncoder, "User Demo", "usuario@demo.com", "Usuario123*", Role.USER);
         };
+    }
+
+    private void createDemoUser(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                                String name, String email, String password, Role role) {
+        if (userRepository.existsByEmail(email)) {
+            return;
+        }
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole(role);
+        user.setActive(true);
+        userRepository.save(user);
+        System.out.println("Demo user created: " + email + " (" + role + ")");
     }
 }

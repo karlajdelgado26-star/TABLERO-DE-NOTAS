@@ -1,0 +1,22 @@
+<header class="app-header">
+  <div class="header-left">
+    <a routerLink="/boards" class="brand">Team Portal</a>
+    <nav class="nav">
+      <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+      <a routerLink="/boards" routerLinkActive="active">Tableros</a>
+      @if (authService.canManageUsers()) {
+        <a routerLink="/admin/users" routerLinkActive="active">Usuarios</a>
+      }
+    </nav>
+  </div>
+
+  <div class="header-right">
+    @if (authService.currentUser(); as user) {
+      <span class="user-info">
+        {{ user.name }}
+        <span [class]="'role-badge role-' + user.role.toLowerCase()">{{ roleLabels[user.role] }}</span>
+      </span>
+    }
+    <button type="button" class="btn btn-danger btn-small" (click)="logout()">Cerrar sesión</button>
+  </div>
+</header>

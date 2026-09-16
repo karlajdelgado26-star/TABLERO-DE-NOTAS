@@ -1,1 +1,287 @@
-/* You can add global styles to this file, and also import other style files */
+/* Estilos globales compartidos por todas las pantallas */
+:root {
+  /* Colores de estado de las notas (validados para daltonismo; siempre van con etiqueta) */
+  --status-pending: #eda100;
+  --status-in-progress: #2a78d6;
+  --status-completed: #1baf7a;
+  /* Series sin identidad propia (conteos simples, "creadas") */
+  --series-neutral: #94a3b8;
+  --series-context: #6b7280;
+  /* Cromo de las gráficas */
+  --chart-surface: #ffffff;
+  --chart-grid: #eceef1;
+  --chart-baseline: #d1d5db;
+  --ink-1: #1f2937;
+  --ink-2: #4b5563;
+  --ink-3: #6b7280;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: #1f2937;
+  background-color: #f3f4f6;
+}
+
+h1, h2, h3 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.muted {
+  color: #6b7280;
+}
+
+/* ---------- Layout de páginas ---------- */
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.page-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.page-title-row h1 {
+  font-size: 1.6rem;
+}
+
+.page-title-row p {
+  margin: 0.25rem 0 0;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state {
+  background: white;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* ---------- Botones ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-small { padding: 0.3rem 0.65rem; font-size: 0.85rem; }
+
+.btn-primary { background: #2563eb; color: white; }
+.btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+
+.btn-success { background: #10b981; color: white; }
+.btn-success:hover:not(:disabled) { background: #059669; }
+
+.btn-danger { background: #ef4444; color: white; }
+.btn-danger:hover:not(:disabled) { background: #dc2626; }
+
+.btn-secondary { background: #e5e7eb; color: #374151; }
+.btn-secondary:hover:not(:disabled) { background: #d1d5db; }
+
+.btn-danger-outline { background: white; color: #dc2626; border-color: #fca5a5; }
+.btn-danger-outline:hover:not(:disabled) { background: #fee2e2; }
+
+.btn-success-outline { background: white; color: #047857; border-color: #6ee7b7; }
+.btn-success-outline:hover:not(:disabled) { background: #d1fae5; }
+
+/* ---------- Formularios ---------- */
+.form-card {
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.form-card h2 {
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font: inherit;
+  color: #1f2937;
+  background: white;
+}
+
+.form-field textarea { resize: vertical; }
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* ---------- Mensajes ---------- */
+.alert {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+.alert button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-weight: bold;
+}
+.alert-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+.alert-success { background: #d1fae5; color: #047857; border: 1px solid #6ee7b7; }
+
+/* ---------- Etiquetas ---------- */
+.role-badge,
+.status-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.role-admin { background: #ede9fe; color: #5b21b6; }
+.role-leader { background: #dbeafe; color: #1e40af; }
+.role-user { background: #e5e7eb; color: #374151; }
+.status-active { background: #d1fae5; color: #047857; }
+.status-inactive { background: #fee2e2; color: #b91c1c; }
+
+/* Tipo y estado de tablero */
+.board-type-badge { background: #f3f4f6; color: #374151; }
+.board-status-active { background: #d1fae5; color: #047857; }
+.board-status-paused { background: #fef3c7; color: #92400e; }
+.board-status-finished { background: #e5e7eb; color: #374151; }
+
+/* Punto de color + etiqueta para estados de nota */
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.status-dot.pending { background: var(--status-pending); }
+.status-dot.in_progress { background: var(--status-in-progress); }
+.status-dot.completed { background: var(--status-completed); }
+
+/* ---------- Paneles y tablas de datos (dashboard) ---------- */
+.panel {
+  background: var(--chart-surface);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 1rem 1.1rem 1.1rem;
+  min-width: 0;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.panel-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.panel-header p {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0.15rem 0.25rem;
+  color: #2563eb;
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.link-button:hover { text-decoration: underline; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.data-table th,
+.data-table td {
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+.data-table th {
+  background: #f9fafb;
+  color: var(--ink-3);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.data-table td.num,
+.data-table th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

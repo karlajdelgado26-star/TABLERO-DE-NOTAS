@@ -1,0 +1,131 @@
+<div class="page">
+  <app-header />
+
+  <main class="page-content">
+    <div class="page-title-row">
+      <div>
+        <h1>Usuarios</h1>
+        <p class="muted">Crea usuarios, cambia sus datos, rol y contraseña, o elimínalos (quedan inactivos).</p>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="openCreate()">+ Nuevo usuario</button>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <span>{{ errorMessage() }}</span>
+        <button type="button" (click)="errorMessage.set('')">✕</button>
+      </div>
+    }
+    @if (successMessage()) {
+      <div class="alert alert-success">
+        <span>{{ successMessage() }}</span>
+        <button type="button" (click)="successMessage.set('')">✕</button>
+      </div>
+    }
+
+    @if (formMode(); as mode) {
+      <form class="card form-card" (ngSubmit)="submitForm()">
+        @switch (mode) {
+          @case ('create') { <h2>Nuevo usuario</h2> }
+          @case ('edit') { <h2>Editar a {{ selectedUser()?.name }}</h2> }
+          @case ('password') { <h2>Cambiar contraseña de {{ selectedUser()?.name }}</h2> }
+        }
+
+        <div class="form-grid">
+          @if (mode !== 'password') {
+            <label class="form-field">
+              Nombre
+              <input name="name" [(ngModel)]="formName" required maxlength="255">
+            </label>
+            <label class="form-field">
+              Email
+              <input name="email" type="email" [(ngModel)]="formEmail" required>
+            </label>
+            <label class="form-field">
+              Rol
+              <select name="role" [(ngModel)]="formRole" [disabled]="mode === 'edit' && !!selectedUser() && isSelf(selectedUser()!)">
+                @for (role of roles; track role) {
+                  <option [value]="role">{{ roleLabels[role] }}</option>
+                }
+              </select>
+            </label>
+          }
+
+          @if (mode !== 'edit') {
+            <label class="form-field">
+              {{ mode === 'password' ? 'Nueva contraseña' : 'Contraseña' }}
+              <input name="password" type="password" [(ngModel)]="formPassword" required minlength="8" autocomplete="new-password">
+            </label>
+            <label class="form-field">
+              Confirmar contraseña
+              <input name="passwordConfirm" type="password" [(ngModel)]="formPasswordConfirm" required minlength="8" autocomplete="new-password">
+            </label>
+          }
+        </div>
+
+        @if (mode === 'edit' && selectedUser() && isSelf(selectedUser()!)) {
+          <p class="muted form-note">No puedes cambiar tu propio rol.</p>
+        }
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">Guardar</button>
+        </div>
+      </form>
+    }
+
+    <label class="toggle-inactive">
+      <input type="checkbox" [checked]="showInactive()" (change)="showInactive.set(!showInactive())">
+      Mostrar usuarios inactivos
+    </label>
+
+    @if (loading()) {
+      <p class="muted">Cargando usuarios...</p>
+    } @else {
+      <div class="card table-wrapper">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th class="actions-col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of visibleUsers(); track user.id) {
+              <tr [class.inactive]="!user.active">
+                <td>
+                  {{ user.name }}
+                  @if (isSelf(user)) { <span class="muted">(tú)</span> }
+                </td>
+                <td>{{ user.email }}</td>
+                <td><span [class]="'role-badge role-' + user.role.toLowerCase()">{{ roleLabels[user.role] }}</span></td>
+                <td>
+                  <span class="status-badge" [class.status-active]="user.active" [class.status-inactive]="!user.active">
+                    {{ user.active ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="actions-col">
+                  <button type="button" class="btn btn-small btn-secondary" (click)="openEdit(user)">Editar</button>
+                  <button type="button" class="btn btn-small btn-secondary" (click)="openPassword(user)">Contraseña</button>
+                  @if (user.active) {
+                    <button type="button" class="btn btn-small btn-danger-outline" (click)="deactivate(user)"
+                            [disabled]="isSelf(user)" [title]="isSelf(user) ? 'No puedes eliminar tu propio usuario' : ''">
+                      Eliminar
+                    </button>
+                  } @else {
+                    <button type="button" class="btn btn-small btn-success-outline" (click)="activate(user)">Reactivar</button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="muted empty-row">No hay usuarios para mostrar.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </main>
+</div>

@@ -1,0 +1,370 @@
+<div class="page">
+  <app-header />
+
+  <main class="dashboard-content">
+    <div class="page-title-row">
+      <div>
+        <h1>Dashboard</h1>
+        <p class="muted">
+          Estado de los tableros, avance de las notas y actividad del equipo
+          @if (data(); as d) { · actualizado {{ relative(d.generatedAt) }} }
+        </p>
+      </div>
+      <button type="button" class="btn btn-secondary" (click)="reload()" [disabled]="loading()">
+        {{ loading() ? 'Actualizando...' : 'Actualizar' }}
+      </button>
+    </div>
+
+    <!-- Filtros: una sola fila, afectan a todo lo que está debajo -->
+    <section class="panel filters" aria-label="Filtros del dashboard">
+      <label class="filter">
+        <span>Periodo</span>
+        <select [ngModel]="period()" (ngModelChange)="changePeriod($event)">
+          <option value="ALL">Todo el tiempo</option>
+          <option value="LAST_7">Últimos 7 días</option>
+          <option value="LAST_30">Últimos 30 días</option>
+          <option value="LAST_90">Últimos 90 días</option>
+          <option value="THIS_MONTH">Este mes</option>
+          <option value="CUSTOM">Personalizado…</option>
+        </select>
+      </label>
+      @if (period() === 'CUSTOM') {
+        <label class="filter">
+          <span>Desde</span>
+          <input type="date" [(ngModel)]="customFrom" (change)="applyCustomRange()">
+        </label>
+        <label class="filter">
+          <span>Hasta</span>
+          <input type="date" [(ngModel)]="customTo" (change)="applyCustomRange()">
+        </label>
+      }
+      <label class="filter">
+        <span>Tablero</span>
+        <select [ngModel]="filters().boardId" (ngModelChange)="setFilter('boardId', $event)">
+          <option [ngValue]="null">Todos</option>
+          @for (board of boardOptions(); track board.id) {
+            <option [ngValue]="board.id">{{ board.name }}</option>
+          }
+        </select>
+      </label>
+      <label class="filter">
+        <span>Tipo de tablero</span>
+        <select [ngModel]="filters().boardType" (ngModelChange)="setFilter('boardType', $event)">
+          <option [ngValue]="null">Todos</option>
+          @for (type of boardTypes; track type) {
+            <option [ngValue]="type">{{ typeLabels[type] }}</option>
+          }
+        </select>
+      </label>
+      <label class="filter">
+        <span>Estado del tablero</span>
+        <select [ngModel]="filters().boardStatus" (ngModelChange)="setFilter('boardStatus', $event)">
+          <option [ngValue]="null">Todos</option>
+          @for (status of boardStatuses; track status) {
+            <option [ngValue]="status">{{ boardStatusLabels[status] }}</option>
+          }
+        </select>
+      </label>
+      <label class="filter">
+        <span>Empleado</span>
+        <select [ngModel]="filters().userId" (ngModelChange)="setFilter('userId', $event)">
+          <option [ngValue]="null">Todos</option>
+          @for (user of userOptions(); track user.id) {
+            <option [ngValue]="user.id">{{ user.name }}{{ user.active ? '' : ' (inactivo)' }}</option>
+          }
+        </select>
+      </label>
+      @if (hasFilters()) {
+        <button type="button" class="link-button clear" (click)="clearFilters()">Limpiar filtros</button>
+      }
+    </section>
+
+    @if (activeChips().length > 0) {
+      <div class="chips-row" aria-label="Filtros aplicados">
+        @for (chip of activeChips(); track chip.key) {
+          <span class="chip">
+            {{ chip.label }}
+            <button type="button" (click)="removeChip(chip.key)" [attr.aria-label]="'Quitar ' + chip.label">✕</button>
+          </span>
+        }
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <span>{{ errorMessage() }}</span>
+        <button type="button" (click)="reload()">Reintentar</button>
+      </div>
+    }
+
+    @if (data(); as d) {
+      <div class="canvas" [class.refreshing]="loading()">
+
+        <!-- ================= Avance general ================= -->
+        <section class="panel hero span-4" aria-label="Avance general">
+          <h2>Avance general</h2>
+          <div class="hero-value">{{ formatPct(d.totals.completionRate) }}</div>
+          <div class="meter" role="img" [attr.aria-label]="d.totals.completionRate + '% de las notas completadas'">
+            <span class="meter-fill" [style.width.%]="d.totals.completionRate"></span>
+          </div>
+          <p class="hero-caption">{{ format(d.totals.completed) }} de {{ format(d.totals.notes) }} notas completadas</p>
+        </section>
+
+        <!-- ================= KPIs ================= -->
+        <section class="kpis span-8" aria-label="Indicadores">
+          <div class="panel tile">
+            <span class="tile-label">Notas</span>
+            <span class="tile-value">{{ format(d.totals.notes) }}</span>
+            <span class="tile-sub">{{ format(d.totals.pending) }} pendientes · {{ format(d.totals.inProgress) }} en progreso</span>
+          </div>
+          <div class="panel tile">
+            <span class="tile-label">Tableros</span>
+            <span class="tile-value">{{ format(d.totals.boards) }}</span>
+            <span class="tile-sub">{{ format(d.boardsByStatus[0]?.count ?? 0) }} activos</span>
+          </div>
+          <div class="panel tile">
+            <span class="tile-label">Empleados con notas</span>
+            <span class="tile-value">{{ format(d.totals.contributors) }}</span>
+            <span class="tile-sub">de {{ format(d.users.length) }} en la lista</span>
+          </div>
+          <div class="panel tile">
+            <span class="tile-label">Acciones registradas</span>
+            <span class="tile-value">{{ format(d.totals.activities) }}</span>
+            <span class="tile-sub">{{ rangeLabel() }}</span>
+          </div>
+          <button type="button" class="panel tile tile-button" [disabled]="!d.mostNotes"
+                  (click)="d.mostNotes && onUserClick(d.mostNotes.id)">
+            <span class="tile-label">Más notas</span>
+            <span class="tile-value tile-name">{{ d.mostNotes?.name ?? '—' }}</span>
+            <span class="tile-sub">{{ d.mostNotes ? format(d.mostNotes.notes) + ' notas' : 'Sin notas' }}</span>
+          </button>
+          <button type="button" class="panel tile tile-button" [disabled]="!d.fewestNotes"
+                  (click)="d.fewestNotes && onUserClick(d.fewestNotes.id)">
+            <span class="tile-label">Menos notas</span>
+            <span class="tile-value tile-name">{{ d.fewestNotes?.name ?? '—' }}</span>
+            <span class="tile-sub">{{ d.fewestNotes ? format(d.fewestNotes.notes) + ' notas' : '—' }}</span>
+          </button>
+        </section>
+
+        <!-- ================= Estado de las notas ================= -->
+        <section class="panel span-4">
+          <div class="panel-header">
+            <div>
+              <h2>Estado de las notas</h2>
+              <p>Clic en un estado para ver esas notas</p>
+            </div>
+            <button type="button" class="link-button" (click)="toggleTable('status')">{{ isTable('status') ? 'Ver gráfica' : 'Ver tabla' }}</button>
+          </div>
+          @if (isTable('status')) {
+            <table class="data-table">
+              <thead><tr><th>Estado</th><th class="num">Notas</th><th class="num">%</th></tr></thead>
+              <tbody>
+                @for (segment of statusSegments(); track segment.key) {
+                  <tr><td>{{ segment.label }}</td><td class="num">{{ format(segment.value) }}</td><td class="num">{{ percent(segment.value, d.totals.notes) }}</td></tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <app-donut-chart [segments]="statusSegments()" centerLabel="notas" (segmentClick)="onStatusClick($event)" />
+          }
+        </section>
+
+        <!-- ================= Tableros por tipo ================= -->
+        <section class="panel span-4">
+          <div class="panel-header">
+            <div>
+              <h2>Tipos de tablero</h2>
+              <p>Clic para filtrar por tipo</p>
+            </div>
+            <button type="button" class="link-button" (click)="toggleTable('types')">{{ isTable('types') ? 'Ver gráfica' : 'Ver tabla' }}</button>
+          </div>
+          @if (isTable('types')) {
+            <table class="data-table">
+              <thead><tr><th>Tipo</th><th class="num">Tableros</th></tr></thead>
+              <tbody>
+                @for (item of typeItems(); track item.key) {
+                  <tr><td>{{ item.label }}</td><td class="num">{{ format(item.value) }}</td></tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <app-bar-list [items]="typeItems()" [selectedKey]="filters().boardType" (itemClick)="onTypeClick($event)" />
+          }
+        </section>
+
+        <!-- ================= Estado de los tableros ================= -->
+        <section class="panel span-4">
+          <div class="panel-header">
+            <div>
+              <h2>Estado de los tableros</h2>
+              <p>Clic para filtrar por estado</p>
+            </div>
+            <button type="button" class="link-button" (click)="toggleTable('boardStatus')">{{ isTable('boardStatus') ? 'Ver gráfica' : 'Ver tabla' }}</button>
+          </div>
+          @if (isTable('boardStatus')) {
+            <table class="data-table">
+              <thead><tr><th>Estado</th><th class="num">Tableros</th></tr></thead>
+              <tbody>
+                @for (item of boardStatusItems(); track item.key) {
+                  <tr><td>{{ item.label }}</td><td class="num">{{ format(item.value) }}</td></tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <app-bar-list [items]="boardStatusItems()" [selectedKey]="filters().boardStatus" (itemClick)="onBoardStatusClick($event)" />
+          }
+        </section>
+
+        <!-- ================= Avance en el tiempo ================= -->
+        <section class="panel span-12">
+          <div class="panel-header">
+            <div>
+              <h2>Avance en el tiempo</h2>
+              <p>Notas creadas y completadas {{ timelineSubtitle() }}</p>
+            </div>
+            <button type="button" class="link-button" (click)="toggleTable('timeline')">{{ isTable('timeline') ? 'Ver gráfica' : 'Ver tabla' }}</button>
+          </div>
+          @if (isTable('timeline')) {
+            <div class="scroll-table">
+              <table class="data-table">
+                <thead><tr><th>{{ d.timeline.granularity === 'WEEK' ? 'Semana del' : 'Día' }}</th><th class="num">Creadas</th><th class="num">Completadas</th></tr></thead>
+                <tbody>
+                  @for (point of d.timeline.points; track point.date) {
+                    <tr><td>{{ shortDay(point.date) }}</td><td class="num">{{ point.created }}</td><td class="num">{{ point.completed }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <app-line-chart [labels]="timelineLabels()" [tooltipLabels]="timelineTooltipLabels()" [series]="timelineSeries()" />
+          }
+        </section>
+
+        <!-- ================= Notas por empleado ================= -->
+        <section class="panel span-7">
+          <div class="panel-header">
+            <div>
+              <h2>Notas por empleado</h2>
+              <p>De más a menos notas · clic en un empleado para ver solo lo suyo</p>
+            </div>
+            <button type="button" class="link-button" (click)="toggleTable('users')">{{ isTable('users') ? 'Ver gráfica' : 'Ver tabla' }}</button>
+          </div>
+          @if (isTable('users')) {
+            <div class="scroll-table">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Empleado</th><th>Rol</th>
+                    <th class="num">Pendientes</th><th class="num">En progreso</th><th class="num">Completadas</th>
+                    <th class="num">Total</th><th class="num">% compl.</th><th class="num">Acciones</th><th>Última actividad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (user of d.users; track user.id) {
+                    <tr>
+                      <td>{{ user.name }}@if (!user.active) { <span class="muted"> (inactivo)</span> }</td>
+                      <td>{{ roleLabels[user.role] }}</td>
+                      <td class="num">{{ user.notes.pending }}</td>
+                      <td class="num">{{ user.notes.inProgress }}</td>
+                      <td class="num">{{ user.notes.completed }}</td>
+                      <td class="num">{{ user.notes.total }}</td>
+                      <td class="num">{{ formatPct(user.notes.completionRate) }}</td>
+                      <td class="num">{{ user.activities }}</td>
+                      <td [attr.title]="dateTime(user.lastActivityAt)">{{ relative(user.lastActivityAt) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <app-stacked-bars [rows]="userRows()" [legend]="statusLegend" [selectedId]="filters().userId"
+                              emptyText="No hay empleados con estos filtros." (rowClick)="onUserClick($event)" />
+          }
+        </section>
+
+        <!-- ================= Avance por tablero ================= -->
+        <section class="panel span-5">
+          <div class="panel-header">
+            <div>
+              <h2>Avance por tablero</h2>
+              <p>Notas de cada tablero por estado · clic para filtrar</p>
+            </div>
+            <button type="button" class="link-button" (click)="toggleTable('boards')">{{ isTable('boards') ? 'Ver gráfica' : 'Ver tabla' }}</button>
+          </div>
+          @if (isTable('boards')) {
+            <div class="scroll-table">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Tablero</th><th>Tipo</th><th>Estado</th><th class="num">Notas</th><th class="num">% compl.</th></tr>
+                </thead>
+                <tbody>
+                  @for (board of d.boards; track board.id) {
+                    <tr>
+                      <td>{{ board.name }}</td>
+                      <td>{{ typeLabels[board.type] }}</td>
+                      <td>{{ boardStatusLabels[board.status] }}</td>
+                      <td class="num">{{ board.notes.total }}</td>
+                      <td class="num">{{ formatPct(board.notes.completionRate) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <app-stacked-bars [rows]="boardRows()" [legend]="statusLegend" [selectedId]="filters().boardId"
+                              emptyText="No hay tableros con estos filtros." (rowClick)="onBoardClick($event)" />
+          }
+        </section>
+
+        <!-- ================= Actividad de los empleados ================= -->
+        <section class="panel span-7">
+          <div class="panel-header">
+            <div>
+              <h2>Actividad de los empleados</h2>
+              <p>Quién hizo qué y cuándo · {{ rangeLabel() }}</p>
+            </div>
+          </div>
+          <app-activity-feed [filters]="filters()" [refreshKey]="refreshKey()" />
+        </section>
+
+        <!-- ================= Acciones por tipo ================= -->
+        <section class="panel span-5">
+          <div class="panel-header">
+            <div>
+              <h2>Acciones por tipo</h2>
+              <p>Qué tipo de trabajo se está registrando</p>
+            </div>
+            <button type="button" class="link-button" (click)="toggleTable('actions')">{{ isTable('actions') ? 'Ver gráfica' : 'Ver tabla' }}</button>
+          </div>
+          @if (activityItems().length === 0) {
+            <p class="muted">Todavía no hay acciones registradas con estos filtros.</p>
+          } @else if (isTable('actions')) {
+            <table class="data-table">
+              <thead><tr><th>Acción</th><th class="num">Cantidad</th></tr></thead>
+              <tbody>
+                @for (item of activityItems(); track item.key) {
+                  <tr><td>{{ item.label }}</td><td class="num">{{ format(item.value) }}</td></tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <app-bar-list labelWidth="13rem" [items]="activityItems()" />
+          }
+        </section>
+
+        <!-- ================= Detalle de notas ================= -->
+        <section class="panel span-12" #notesSection>
+          <div class="panel-header">
+            <div>
+              <h2>Detalle de notas</h2>
+              <p>Cada nota con su tablero, autor y estado actual</p>
+            </div>
+          </div>
+          <app-notes-table [rows]="d.notes" [(status)]="noteStatusFilter" />
+        </section>
+      </div>
+    } @else if (loading()) {
+      <p class="muted">Cargando métricas...</p>
+    }
+  </main>
+</div>
