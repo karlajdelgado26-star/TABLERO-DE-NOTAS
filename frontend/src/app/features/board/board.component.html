@@ -1,0 +1,40 @@
+<div class="board-container">
+  <header class="board-header">
+    <div class="header-left">
+      <h1>Tablero Compartido</h1>
+      <button class="add-note-btn" (click)="createNote()">+ Nueva nota</button>
+    </div>
+    <div class="header-right">
+      <span class="user-info" *ngIf="authService.currentUser() as user">
+        {{ user.name }} ({{ user.role }})
+      </span>
+      <button class="logout-btn" (click)="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <div class="error-banner" *ngIf="errorMessage">
+    {{ errorMessage }}
+    <button (click)="errorMessage = ''">✕</button>
+  </div>
+
+  <div class="board-canvas-wrapper">
+    <div class="board-canvas" cdkDropListGroup>
+      <div 
+        cdkDrag
+        (cdkDragEnded)="onDragEnded($event, note)"
+        cdkDragBoundary=".board-canvas"
+        class="draggable-wrapper"
+        *ngFor="let note of notes()"
+        [style.left.px]="note.positionX"
+        [style.top.px]="note.positionY">
+        
+        <app-note-card 
+          [note]="note"
+          (update)="onUpdateNote($event)"
+          (delete)="onDeleteNote($event)">
+        </app-note-card>
+        
+      </div>
+    </div>
+  </div>
+</div>

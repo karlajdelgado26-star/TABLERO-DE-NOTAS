@@ -1,0 +1,28 @@
+<div class="note-card" [ngClass]="note.status.toLowerCase()">
+  <div class="note-header" (mousedown)="$event.stopPropagation()">
+    <div class="actions">
+      <button class="icon-btn edit-btn" *ngIf="!isEditing" (click)="startEdit()">✎</button>
+      <button class="icon-btn delete-btn" (click)="onDelete()">✕</button>
+    </div>
+  </div>
+
+  <div class="note-content-display" *ngIf="!isEditing">
+    <h3 class="note-title">{{ note.title }}</h3>
+    <p class="note-text">{{ note.content }}</p>
+    <div class="note-status-badge">{{ note.status }}</div>
+  </div>
+
+  <div class="note-edit-form" *ngIf="isEditing" (mousedown)="$event.stopPropagation()">
+    <input type="text" [(ngModel)]="editTitle" placeholder="Título" class="edit-input" required>
+    <textarea [(ngModel)]="editContent" placeholder="Contenido" class="edit-textarea"></textarea>
+    <select [(ngModel)]="editStatus" class="edit-select">
+      <option value="PENDING">Pendiente</option>
+      <option value="IN_PROGRESS">En progreso</option>
+      <option value="COMPLETED">Completada</option>
+    </select>
+    <div class="edit-actions">
+      <button class="save-btn" (click)="saveEdit()">Guardar</button>
+      <button class="cancel-btn" (click)="cancelEdit()">Cancelar</button>
+    </div>
+  </div>
+</div>

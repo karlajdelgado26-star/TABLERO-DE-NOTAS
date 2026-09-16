@@ -1,0 +1,124 @@
+.note-card {
+  width: 250px;
+  min-height: 250px;
+  background-color: #fef08a; /* PENDING default yellow */
+  padding: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: linear-gradient(135deg, #ffff88 81%, #ffff88 82%, #ffff88 82%, #ffffc6 100%);
+  border-bottom-right-radius: 60px 5px;
+  cursor: grab;
+  box-sizing: border-box;
+}
+
+.note-card:active {
+  cursor: grabbing;
+}
+
+.note-card.in_progress {
+  background: linear-gradient(135deg, #bae6fd 81%, #bae6fd 82%, #bae6fd 82%, #e0f2fe 100%);
+}
+
+.note-card.completed {
+  background: linear-gradient(135deg, #bbf7d0 81%, #bbf7d0 82%, #bbf7d0 82%, #dcfce7 100%);
+}
+
+.note-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #4b5563;
+  margin-left: 0.5rem;
+}
+
+.icon-btn:hover {
+  color: #111827;
+}
+
+.delete-btn:hover {
+  color: #dc2626;
+}
+
+.note-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  word-wrap: break-word;
+}
+
+.note-text {
+  margin: 0;
+  flex-grow: 1;
+  color: #374151;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.note-status-badge {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #4b5563;
+}
+
+.note-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+}
+
+.edit-input, .edit-textarea, .edit-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.edit-textarea {
+  flex-grow: 1;
+  resize: none;
+  min-height: 80px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.save-btn {
+  flex: 1;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  flex: 1;
+  background-color: #e5e7eb;
+  color: #374151;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.save-btn:hover { background-color: #1d4ed8; }
+.cancel-btn:hover { background-color: #d1d5db; }
