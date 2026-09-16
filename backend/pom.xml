@@ -104,6 +104,13 @@
 			<version>0.12.3</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- Documentación de la API: OpenAPI 3 + Swagger UI (springdoc 3.x es la línea para Spring Boot 4) -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>3.1.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

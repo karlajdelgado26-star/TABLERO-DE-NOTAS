@@ -18,7 +18,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 || error.status === 403) {
+      // 401 = sin sesión válida (token vencido o usuario desactivado).
+      // 403 = sesión válida pero sin permiso: se muestra el mensaje y NO se cierra la sesión.
+      const isLoginRequest = req.url.includes('/api/auth/login');
+      if (error.status === 401 && !isLoginRequest) {
         authService.logout();
       }
       return throwError(() => error);

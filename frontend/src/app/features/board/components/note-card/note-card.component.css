@@ -17,6 +17,12 @@
   cursor: grabbing;
 }
 
+/* Nota de otro usuario que el usuario actual no puede mover ni editar */
+.note-card.readonly,
+.note-card.readonly:active {
+  cursor: default;
+}
+
 .note-card.in_progress {
   background: linear-gradient(135deg, #bae6fd 81%, #bae6fd 82%, #bae6fd 82%, #e0f2fe 100%);
 }
@@ -27,8 +33,39 @@
 
 .note-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
+  cursor: default;
+}
+
+.note-author {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inactive-tag {
+  font-weight: 400;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.readonly-tag {
+  font-size: 0.7rem;
+  color: #6b7280;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
 }
 
 .icon-btn {
@@ -120,5 +157,6 @@
   cursor: pointer;
 }
 
-.save-btn:hover { background-color: #1d4ed8; }
+.save-btn:hover:not(:disabled) { background-color: #1d4ed8; }
+.save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .cancel-btn:hover { background-color: #d1d5db; }

@@ -1,0 +1,101 @@
+<div class="page">
+  <app-header />
+
+  <main class="page-content">
+    <div class="page-title-row">
+      <div>
+        <h1>Tableros</h1>
+        <p class="muted">Entra a un tablero para ver sus notas y agregar las tuyas.</p>
+      </div>
+      @if (authService.canManageBoards()) {
+        <button type="button" class="btn btn-primary" (click)="openCreate()">+ Nuevo tablero</button>
+      }
+    </div>
+
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <span>{{ errorMessage() }}</span>
+        <button type="button" (click)="errorMessage.set('')">✕</button>
+      </div>
+    }
+
+    @if (formTarget() !== null) {
+      <form class="card form-card" (ngSubmit)="saveBoard()">
+        <h2>{{ isEditing() ? 'Editar tablero' : 'Nuevo tablero' }}</h2>
+        <div class="form-grid">
+          <label class="form-field">
+            Nombre
+            <input name="name" [(ngModel)]="formName" required maxlength="100" placeholder="Ej. Sprint 12">
+          </label>
+          <label class="form-field">
+            Tipo
+            <select name="type" [(ngModel)]="formType">
+              @for (type of boardTypes; track type) {
+                <option [value]="type">{{ typeLabels[type] }}</option>
+              }
+            </select>
+          </label>
+          <label class="form-field">
+            Estado
+            <select name="status" [(ngModel)]="formStatus">
+              @for (status of boardStatuses; track status) {
+                <option [value]="status">{{ statusLabels[status] }}</option>
+              }
+            </select>
+          </label>
+          <label class="form-field">
+            Descripción (opcional)
+            <textarea name="description" [(ngModel)]="formDescription" maxlength="500" rows="2"></textarea>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">Guardar</button>
+        </div>
+      </form>
+    }
+
+    @if (loading()) {
+      <p class="muted">Cargando tableros...</p>
+    } @else if (boards().length === 0) {
+      <div class="empty-state">
+        No hay tableros todavía.
+        @if (authService.canManageBoards()) {
+          Crea el primero con «+ Nuevo tablero».
+        } @else {
+          Pide a un líder o administrador que cree uno.
+        }
+      </div>
+    } @else {
+      <div class="board-grid">
+        @for (board of boards(); track board.id) {
+          <article class="card board-card">
+            <a class="board-link" [routerLink]="['/boards', board.id]">
+              <div class="board-badges">
+                <span class="role-badge board-type-badge">{{ typeLabels[board.type] }}</span>
+                <span [class]="'role-badge board-status-' + board.status.toLowerCase()">{{ statusLabels[board.status] }}</span>
+              </div>
+              <h3>{{ board.name }}</h3>
+              @if (board.description) {
+                <p class="board-description">{{ board.description }}</p>
+              }
+              <div class="board-meta">
+                <span>{{ board.noteCount }} {{ board.noteCount === 1 ? 'nota' : 'notas' }}</span>
+                @if (board.createdBy) {
+                  <span>Creado por {{ board.createdBy.name }}</span>
+                }
+              </div>
+            </a>
+
+            @if (authService.canManageBoards()) {
+              <div class="board-actions">
+                <button type="button" class="btn btn-small btn-secondary" (click)="openEdit(board)">Editar</button>
+                <button type="button" class="btn btn-small btn-danger-outline" (click)="deleteBoard(board)">Eliminar</button>
+              </div>
+            }
+          </article>
+        }
+      </div>
+    }
+  </main>
+</div>

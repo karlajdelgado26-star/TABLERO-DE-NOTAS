@@ -1,40 +1,57 @@
 <div class="board-container">
-  <header class="board-header">
-    <div class="header-left">
-      <h1>Tablero Compartido</h1>
-      <button class="add-note-btn" (click)="createNote()">+ Nueva nota</button>
-    </div>
-    <div class="header-right">
-      <span class="user-info" *ngIf="authService.currentUser() as user">
-        {{ user.name }} ({{ user.role }})
-      </span>
-      <button class="logout-btn" (click)="logout()">Cerrar sesión</button>
-    </div>
-  </header>
+  <app-header />
 
-  <div class="error-banner" *ngIf="errorMessage">
-    {{ errorMessage }}
-    <button (click)="errorMessage = ''">✕</button>
+  <div class="board-toolbar">
+    <div class="toolbar-left">
+      <a routerLink="/boards" class="back-link">← Tableros</a>
+      <div class="board-title">
+        <h1>{{ board()?.name ?? 'Tablero' }}</h1>
+        @if (board(); as current) {
+          <span class="role-badge board-type-badge">{{ typeLabels[current.type] }}</span>
+          <span [class]="'role-badge board-status-' + current.status.toLowerCase()">{{ statusLabels[current.status] }}</span>
+        }
+        @if (board()?.description) {
+          <span class="board-description">{{ board()?.description }}</span>
+        }
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <span class="hint">
+        {{ authService.canManageBoards()
+          ? 'Puedes editar, mover y eliminar cualquier nota'
+          : 'Solo puedes editar, mover y eliminar tus propias notas' }}
+      </span>
+      <button type="button" class="btn btn-success" (click)="createNote()" [disabled]="!board()">+ Nueva nota</button>
+    </div>
   </div>
 
+  @if (errorMessage()) {
+    <div class="error-banner">
+      {{ errorMessage() }}
+      <button type="button" (click)="errorMessage.set('')">✕</button>
+    </div>
+  }
+
   <div class="board-canvas-wrapper">
-    <div class="board-canvas" cdkDropListGroup>
-      <div 
-        cdkDrag
-        (cdkDragEnded)="onDragEnded($event, note)"
-        cdkDragBoundary=".board-canvas"
-        class="draggable-wrapper"
-        *ngFor="let note of notes()"
-        [style.left.px]="note.positionX"
-        [style.top.px]="note.positionY">
-        
-        <app-note-card 
-          [note]="note"
-          (update)="onUpdateNote($event)"
-          (delete)="onDeleteNote($event)">
-        </app-note-card>
-        
-      </div>
+    <div class="board-canvas">
+      @for (note of notes(); track note.id) {
+        <div
+          cdkDrag
+          [cdkDragDisabled]="!note.canEdit"
+          (cdkDragEnded)="onDragEnded($event, note)"
+          cdkDragBoundary=".board-canvas"
+          class="draggable-wrapper"
+          [style.left.px]="note.positionX"
+          [style.top.px]="note.positionY">
+
+          <app-note-card
+            [note]="note"
+            (update)="onUpdateNote($event)"
+            (delete)="onDeleteNote($event)">
+          </app-note-card>
+
+        </div>
+      }
     </div>
   </div>
 </div>

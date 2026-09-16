@@ -1,0 +1,4 @@
+# Los scripts de Linux y el Dockerfile deben quedar con saltos de línea LF
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf

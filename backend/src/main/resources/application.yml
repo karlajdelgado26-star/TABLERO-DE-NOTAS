@@ -8,6 +8,7 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
@@ -21,3 +22,17 @@ server:
 jwt:
   secret: ${JWT_SECRET:SuperSecretaClaveDeEjemploParaDesarrolloLocalQueSeaLarga}
   expiration: 86400000 # 24 horas en milisegundos
+
+# Documentación de la API
+#   Swagger UI:   /swagger-ui/index.html
+#   OpenAPI JSON: /v3/api-docs     (YAML: /v3/api-docs.yaml)
+# Para ocultarla: variable de entorno API_DOCS_ENABLED=false
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:true}
+    tags-sorter: alpha
+    operations-sorter: method
+    doc-expansion: none
+    persist-authorization: true

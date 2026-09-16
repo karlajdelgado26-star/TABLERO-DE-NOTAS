@@ -1,28 +1,47 @@
-<div class="note-card" [ngClass]="note.status.toLowerCase()">
+<div class="note-card" [ngClass]="note.status.toLowerCase()" [class.readonly]="!note.canEdit">
   <div class="note-header" (mousedown)="$event.stopPropagation()">
+    <span class="note-author" [title]="note.createdBy ? note.createdBy.name + (note.createdBy.active ? '' : ' (inactivo)') : 'Sin autor'">
+      @if (note.createdBy) {
+        {{ note.createdBy.name }}
+        @if (!note.createdBy.active) {
+          <span class="inactive-tag">(inactivo)</span>
+        }
+      } @else {
+        Sin autor
+      }
+    </span>
     <div class="actions">
-      <button class="icon-btn edit-btn" *ngIf="!isEditing" (click)="startEdit()">✎</button>
-      <button class="icon-btn delete-btn" (click)="onDelete()">✕</button>
+      @if (note.canEdit && !isEditing) {
+        <button type="button" class="icon-btn edit-btn" title="Editar" (click)="startEdit()">✎</button>
+      }
+      @if (note.canDelete) {
+        <button type="button" class="icon-btn delete-btn" title="Eliminar" (click)="onDelete()">✕</button>
+      }
+      @if (!note.canEdit && !note.canDelete) {
+        <span class="readonly-tag" title="Solo su autor, un líder o un administrador pueden modificarla">Solo lectura</span>
+      }
     </div>
   </div>
 
-  <div class="note-content-display" *ngIf="!isEditing">
-    <h3 class="note-title">{{ note.title }}</h3>
-    <p class="note-text">{{ note.content }}</p>
-    <div class="note-status-badge">{{ note.status }}</div>
-  </div>
-
-  <div class="note-edit-form" *ngIf="isEditing" (mousedown)="$event.stopPropagation()">
-    <input type="text" [(ngModel)]="editTitle" placeholder="Título" class="edit-input" required>
-    <textarea [(ngModel)]="editContent" placeholder="Contenido" class="edit-textarea"></textarea>
-    <select [(ngModel)]="editStatus" class="edit-select">
-      <option value="PENDING">Pendiente</option>
-      <option value="IN_PROGRESS">En progreso</option>
-      <option value="COMPLETED">Completada</option>
-    </select>
-    <div class="edit-actions">
-      <button class="save-btn" (click)="saveEdit()">Guardar</button>
-      <button class="cancel-btn" (click)="cancelEdit()">Cancelar</button>
+  @if (!isEditing) {
+    <div class="note-content-display">
+      <h3 class="note-title">{{ note.title }}</h3>
+      <p class="note-text">{{ note.content }}</p>
+      <div class="note-status-badge">{{ statusLabels[note.status] }}</div>
     </div>
-  </div>
+  } @else {
+    <div class="note-edit-form" (mousedown)="$event.stopPropagation()">
+      <input type="text" [(ngModel)]="editTitle" placeholder="Título" class="edit-input" required maxlength="255">
+      <textarea [(ngModel)]="editContent" placeholder="Contenido" class="edit-textarea"></textarea>
+      <select [(ngModel)]="editStatus" class="edit-select">
+        <option value="PENDING">Pendiente</option>
+        <option value="IN_PROGRESS">En progreso</option>
+        <option value="COMPLETED">Completada</option>
+      </select>
+      <div class="edit-actions">
+        <button type="button" class="save-btn" (click)="saveEdit()" [disabled]="!editTitle.trim()">Guardar</button>
+        <button type="button" class="cancel-btn" (click)="cancelEdit()">Cancelar</button>
+      </div>
+    </div>
+  }
 </div>
